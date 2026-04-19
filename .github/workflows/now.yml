@@ -1,0 +1,35 @@
+name: NowTV Arşiv Güncelleyici
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Her gece 00:00'da çalışır
+  workflow_dispatch: # Manuel çalıştırma butonu ekler
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Repoyu Çek
+        uses: actions/checkout@v3
+
+      - name: Python Kur
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Kütüphaneleri Yükle
+        run: |
+          pip install cloudscraper beautifulsoup4
+
+      - name: Scraper'ı Çalıştır
+        run: python nowtv.py
+
+      - name: Değişiklikleri Kaydet ve Pushla
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add nowtv_vod.html
+          # Değişiklik yoksa hata vermemesi için "|| exit 0" ekledik
+          git commit -m "🔄 Otomatik Arşiv Güncellemesi: $(date +'%d-%m-%Y %H:%M')" || exit 0
+          git push
